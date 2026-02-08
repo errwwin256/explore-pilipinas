@@ -841,13 +841,13 @@ const About = () => {
             {
               name: "Trip.com",
               logo: "/affiliates/tripcom.svg",
-              link: "https://www.trip.com",
+              link: "https://www.trip.com/?Allianceid=7807416&SID=294276774&trip_sub1=&trip_sub3=D11914499",
               brand: "from-blue-500 to-sky-400",
             },
             {
               name: "Klook",
               logo: "/affiliates/klook.svg",
-              link: "https://www.klook.com",
+              link: "https://affiliate.klook.com/redirect?aid=111116&aff_adid=1212952&k_site=https%3A%2F%2Fwww.klook.com%2F",
               brand: "from-orange-400 to-red-400",
             },
             {
