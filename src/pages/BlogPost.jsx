@@ -1,6 +1,13 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { doc, getDoc, deleteDoc, updateDoc } from "firebase/firestore";
+import {
+  doc,
+  getDoc,
+  deleteDoc,
+  updateDoc,
+  increment,
+} from "firebase/firestore";
+
 import { db } from "../firebase";
 import { useAuth } from "../context/AuthContext";
 import {
@@ -43,7 +50,7 @@ export default function BlogPost() {
   const [draftSaved, setDraftSaved] = useState(false); // whether Save Draft was clicked
   const [publishing, setPublishing] = useState(false); // when pushing to Firestore
   const [savingError, setSavingError] = useState("");
-
+  const [views, setViews] = useState(0);
   // misc UI
   const [tocOpen, setTocOpen] = useState(false);
   const articleRef = useRef(null);
@@ -64,6 +71,25 @@ export default function BlogPost() {
         }
         const data = { id: snap.id, ...snap.data() };
         if (!mounted) return;
+        // 👁️ set views (fallback to 0 if missing)
+        setViews(typeof data.views === "number" ? data.views : 0);
+
+        // 👁️ count 1 view per SESSION per post
+        // This prevents refreshing from spamming views
+        const sessionKey = `viewed_post_${snap.id}`;
+        if (!sessionStorage.getItem(sessionKey)) {
+          sessionStorage.setItem(sessionKey, "1");
+          try {
+            await updateDoc(doc(db, "posts", snap.id), {
+              views: increment(1),
+            });
+            if (!mounted) return;
+            // update UI instantly
+            setViews((v) => v + 1);
+          } catch (err) {
+            console.warn("Views update blocked or failed:", err);
+          }
+        }
         setPost(data);
         // ensure editing state cleared
         setIsEditing(false);
@@ -112,7 +138,7 @@ export default function BlogPost() {
       }
       const pct = Math.min(
         Math.max((window.scrollY - start) / (end - start), 0),
-        1
+        1,
       );
       progressRef.current.style.width = `${Math.round(pct * 100)}%`;
     };
@@ -142,7 +168,7 @@ export default function BlogPost() {
       .map((b, i) =>
         b.type === "text"
           ? { id: `section-${i}`, title: summarizeForTOC(b.value || "") }
-          : null
+          : null,
       )
       .filter(Boolean);
   }, [post]);
@@ -160,7 +186,7 @@ export default function BlogPost() {
   function copyLink() {
     navigator.clipboard?.writeText(window.location.href).then(
       () => alert("Link copied to clipboard!"),
-      () => alert("Could not copy link.")
+      () => alert("Could not copy link."),
     );
   }
 
@@ -251,7 +277,7 @@ export default function BlogPost() {
     }
     if (
       !window.confirm(
-        "Publish changes to the live post? This will overwrite the post content."
+        "Publish changes to the live post? This will overwrite the post content.",
       )
     )
       return;
@@ -393,13 +419,15 @@ export default function BlogPost() {
                 <span>{formatDate(post.createdAt)}</span>
                 <span>•</span>
                 <span>{readingTime} min read</span>
+                <span>•</span>
+                <span>{views} views</span>
                 {post.province && (
                   <>
                     <span>•</span>
                     <button
                       onClick={() =>
                         navigate(
-                          `/blog?province=${encodeURIComponent(post.province)}`
+                          `/blog?province=${encodeURIComponent(post.province)}`,
                         )
                       }
                       className="text-sky-700 hover:underline font-semibold"
@@ -416,9 +444,9 @@ export default function BlogPost() {
                   onClick={() =>
                     window.open(
                       `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
-                        window.location.href
+                        window.location.href,
                       )}`,
-                      "_blank"
+                      "_blank",
                     )
                   }
                   aria-label="Share on Facebook"
@@ -438,9 +466,9 @@ export default function BlogPost() {
                   onClick={() =>
                     window.open(
                       `https://twitter.com/intent/tweet?url=${encodeURIComponent(
-                        window.location.href
+                        window.location.href,
                       )}&text=${encodeURIComponent(post.title)}`,
-                      "_blank"
+                      "_blank",
                     )
                   }
                   aria-label="Share on X"

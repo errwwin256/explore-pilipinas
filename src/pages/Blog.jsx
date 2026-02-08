@@ -205,12 +205,15 @@ const Blog = () => {
             const img = post.blocks.find((b) => b.type === "image")?.url;
             return (
               <BlogCard
-                key={post.id}
                 id={post.id}
                 title={post.title}
                 featuredImage={img}
                 province={post.province}
                 excerpt={post.excerpt}
+                createdAt={post.createdAt}
+                tags={post.tags || []}
+                views={post.views ?? 0}
+                trending={post.trending}
               />
             );
           })}

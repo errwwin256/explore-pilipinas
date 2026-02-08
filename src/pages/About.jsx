@@ -812,6 +812,121 @@ const About = () => {
           </div>
         </div>
       </section>
+
+      {/* 🤝 TRUSTED AFFILIATE PARTNERS */}
+      <div className="mt-20">
+        {/* TITLE */}
+        <h3
+          className="
+      text-base sm:text-lg md:text-xl
+      font-extrabold
+      tracking-[0.22em]
+      text-sky-800
+      uppercase
+      mb-12
+      text-center
+    "
+        >
+          Trusted Travel Partners
+        </h3>
+
+        <div
+          className="
+      grid grid-cols-2 gap-8
+      sm:grid-cols-2 sm:gap-12
+      lg:flex lg:justify-center lg:gap-20
+    "
+        >
+          {[
+            {
+              name: "Trip.com",
+              logo: "/affiliates/tripcom.svg",
+              link: "https://www.trip.com",
+              brand: "from-blue-500 to-sky-400",
+            },
+            {
+              name: "Klook",
+              logo: "/affiliates/klook.svg",
+              link: "https://www.klook.com",
+              brand: "from-orange-400 to-red-400",
+            },
+            {
+              name: "Agoda",
+              logo: "/affiliates/agoda.svg",
+              link: "https://www.agoda.com",
+              brand: "from-indigo-500 to-blue-500",
+            },
+            {
+              name: "Booking.com",
+              logo: "/affiliates/booking.svg",
+              link: "https://www.booking.com",
+              brand: "from-sky-600 to-indigo-600",
+            },
+          ].map((partner, i) => (
+            <a
+              key={i}
+              href={partner.link}
+              target="_blank"
+              rel="noopener noreferrer sponsored"
+              aria-label={partner.name}
+              onClick={() => {
+                // 🔍 PER-LOGO ANALYTICS TRACKING
+                if (window.gtag) {
+                  window.gtag("event", "affiliate_click", {
+                    partner: partner.name,
+                    placement: "about_affiliate_partners",
+                  });
+                }
+              }}
+              className="
+          flex items-center justify-center
+          transition-transform duration-300
+          hover:scale-105
+          active:scale-95
+        "
+            >
+              {/* RING WRAPPER */}
+              <div
+                className={`
+            relative flex items-center justify-center
+            rounded-full
+            p-[3px]
+            bg-gradient-to-br ${partner.brand}
+            shadow-lg
+          `}
+              >
+                {/* INNER CIRCLE */}
+                <div
+                  className="
+              flex items-center justify-center
+              rounded-full bg-white
+              shadow-inner
+
+              w-28 h-28
+              sm:w-36 sm:h-36
+              lg:w-40 lg:h-40
+            "
+                >
+                  <img
+                    src={partner.logo}
+                    alt={`${partner.name} affiliate partner`}
+                    className="
+                object-contain
+                w-20 h-20
+                sm:w-24 sm:h-24
+                lg:w-28 lg:h-28
+              "
+                  />
+                </div>
+              </div>
+            </a>
+          ))}
+        </div>
+        <p className="mt-8 text-xs sm:text-sm text-gray-600 text-center">
+          Disclosure: Some links on this site are affiliate links. I may earn a
+          commission at no extra cost to you.
+        </p>
+      </div>
     </main>
   );
 };

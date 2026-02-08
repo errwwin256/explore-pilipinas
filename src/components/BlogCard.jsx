@@ -1,5 +1,7 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
+import { doc, updateDoc, increment } from "firebase/firestore";
+import { db } from "../firebase";
 
 const BlogCard = ({
   id,
@@ -9,9 +11,11 @@ const BlogCard = ({
   createdAt,
   tags = [],
   province,
-  views,
+  views: initialViews = 0,
   trending,
 }) => {
+  const [views, setViews] = useState(Number(initialViews) || 0);
+
   const isNew = (() => {
     if (!createdAt) return false;
     let d;
@@ -24,9 +28,20 @@ const BlogCard = ({
   const isTrending =
     trending === true || (typeof views === "number" && views >= 100);
 
+  // Increment views in Firestore and UI
+  const incrementViews = async () => {
+    try {
+      const postRef = doc(db, "posts", id);
+      await updateDoc(postRef, { views: increment(1) });
+      setViews((v) => v + 1); // immediate update in UI
+    } catch (error) {
+      console.error("Failed to increment views:", error);
+    }
+  };
+
   return (
     <article className="bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden">
-      <Link to={`/post/${id}`} className="block">
+      <Link to={`/post/${id}`} className="block" onClick={incrementViews}>
         {/* Image wrapper */}
         <div className="relative group">
           <img
@@ -39,7 +54,7 @@ const BlogCard = ({
           {/* Gradient */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent"></div>
 
-          {/* 📍 Province — Top Left */}
+          {/* Province */}
           {province && (
             <div className="absolute top-2 left-2 z-20">
               <span className="bg-sky-600 text-white text-[10px] sm:text-xs font-semibold px-2 py-1 rounded-full shadow-md">
@@ -48,14 +63,14 @@ const BlogCard = ({
             </div>
           )}
 
-          {/* 👁️ Views — Top Right */}
+          {/* Views */}
           <div className="absolute top-2 right-2 z-20">
             <span className="bg-white/20 backdrop-blur-sm text-white text-[10px] sm:text-xs font-semibold px-2 py-0.5 rounded-full shadow">
-              {typeof views === "number" ? `${views} views` : "0 views"}
+              {views} views
             </span>
           </div>
 
-          {/* Badges Below Views */}
+          {/* Badges */}
           <div className="absolute top-10 right-2 flex flex-wrap gap-1 z-20">
             {isTrending && (
               <span className="bg-red-600 text-white text-[10px] sm:text-xs font-bold px-2 py-0.5 rounded-full shadow-md">
@@ -94,7 +109,11 @@ const BlogCard = ({
 
           {/* Date */}
           <div className="text-right text-[10px] sm:text-xs text-gray-500">
-            {createdAt?.toDate ? createdAt.toDate().toLocaleDateString() : ""}
+            {createdAt?.toDate
+              ? createdAt.toDate().toLocaleDateString()
+              : createdAt
+                ? new Date(createdAt).toLocaleDateString()
+                : ""}
           </div>
         </div>
       </Link>

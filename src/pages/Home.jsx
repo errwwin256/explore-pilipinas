@@ -30,75 +30,117 @@ const Home = () => {
   const [featuredPosts, setFeaturedPosts] = useState([]);
   const [recentPosts, setRecentPosts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
+  // Hero slider interval
   useEffect(() => {
     const interval = setInterval(
       () => setIndex((prev) => (prev + 1) % slides.length),
-      5000
+      5000,
     );
     return () => clearInterval(interval);
   }, [slides.length]);
 
-  const fetchPosts = async () => {
-    try {
-      const featuredQ = query(
-        collection(db, "posts"),
-        orderBy("createdAt", "desc"),
-        limit(3)
-      );
-      const featuredSnap = await getDocs(featuredQ);
-      const featured = featuredSnap.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-      setFeaturedPosts(featured);
-
-      let recent = [];
-      if (featuredSnap.docs.length < 3) {
-        const recentQ = query(
-          collection(db, "posts"),
-          orderBy("createdAt", "desc"),
-          limit(6)
-        );
-        const recentSnap = await getDocs(recentQ);
-        recent = recentSnap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-      } else {
-        const lastDoc = featuredSnap.docs[featuredSnap.docs.length - 1];
-        const recentQ = query(
-          collection(db, "posts"),
-          orderBy("createdAt", "desc"),
-          startAfter(lastDoc),
-          limit(6)
-        );
-        const recentSnap = await getDocs(recentQ);
-        recent = recentSnap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-      }
-      setRecentPosts(recent);
-      setLoading(false);
-    } catch (error) {
-      console.error("Home load error:", error);
-      setLoading(false);
-    }
-  };
-
+  // Fetch posts (safe against unmount)
   useEffect(() => {
+    let mounted = true;
+
+    const fetchPosts = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        // 🔥 TRENDING: by views (real trending)
+        const featuredQ = query(
+          collection(db, "posts"),
+          orderBy("views", "desc"),
+          limit(3),
+        );
+        const featuredSnap = await getDocs(featuredQ);
+        if (!mounted) return;
+
+        const featured = featuredSnap.docs.map((d) => ({
+          id: d.id,
+          ...d.data(),
+        }));
+        setFeaturedPosts(featured);
+
+        // Recent posts (exclude the featured last doc when possible)
+        let recent = [];
+        if (featuredSnap.docs.length < 3) {
+          const recentQ = query(
+            collection(db, "posts"),
+            orderBy("createdAt", "desc"),
+            limit(6),
+          );
+          const recentSnap = await getDocs(recentQ);
+          if (!mounted) return;
+
+          recent = recentSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
+        } else {
+          const lastDoc = featuredSnap.docs[featuredSnap.docs.length - 1];
+          const recentQ = query(
+            collection(db, "posts"),
+            orderBy("createdAt", "desc"),
+            startAfter(lastDoc),
+            limit(6),
+          );
+          const recentSnap = await getDocs(recentQ);
+          if (!mounted) return;
+
+          recent = recentSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
+        }
+
+        setRecentPosts(recent);
+      } catch (err) {
+        console.error("Home load error:", err);
+        if (!mounted) return;
+        setError("Failed to load posts. Please refresh and try again.");
+      } finally {
+        if (!mounted) return;
+        setLoading(false);
+      }
+    };
+
     fetchPosts();
+
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   const SkeletonCard = () => (
     <div className="animate-pulse bg-gray-200 rounded-xl h-64" />
   );
 
+  if (error) {
+    return (
+      <div className="w-full min-h-screen bg-sky-100 flex items-center justify-center px-6">
+        <div className="max-w-md text-center bg-white rounded-2xl shadow p-6">
+          <p className="text-red-600 font-semibold">{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-4 px-5 py-2 rounded-full bg-sky-700 text-white font-semibold hover:bg-sky-800 transition"
+          >
+            Reload
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="w-full overflow-x-hidden bg-sky-100 min-h-screen">
       {/* Responsive Spacer for fixed navbar */}
       <div className="h-6 md:h-12 lg:h-14" />
+
       {/* Hero Slider */}
       <section className="relative h-[50vh] sm:h-[65vh] lg:h-[80vh] overflow-hidden flex items-center justify-center text-center">
         {slides.map((img, i) => (
           <img
             key={i}
             src={img}
+            loading="lazy"
             className={`absolute w-full h-full object-cover transition-opacity duration-[1500ms] ${
               i === index ? "opacity-100" : "opacity-0"
             }`}
@@ -121,11 +163,15 @@ const Home = () => {
         <h2 className="text-2xl md:text-3xl font-bold text-sky-700 mb-6">
           🔥 Trending Stories
         </h2>
+
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
           {loading
             ? [...Array(3)].map((_, i) => <SkeletonCard key={i} />)
             : featuredPosts.map((post) => {
-                const img = post.blocks?.find((b) => b.type === "image")?.url;
+                const firstImage = post.blocks?.find(
+                  (b) => b.type === "image",
+                )?.url;
+
                 return (
                   <div key={post.id} className="relative group">
                     <span className="absolute top-3 left-3 bg-red-600 text-white text-xs font-bold px-2 py-1 rounded-full shadow-lg">
@@ -134,14 +180,19 @@ const Home = () => {
                     <BlogCard
                       id={post.id}
                       title={post.title}
-                      featuredImage={img}
+                      featuredImage={firstImage}
                       province={post.province}
                       excerpt={post.excerpt}
+                      createdAt={post.createdAt}
+                      tags={post.tags || []}
+                      views={post.views ?? 0}
+                      trending={post.trending}
                     />
                   </div>
                 );
               })}
         </div>
+
         <div className="flex justify-center mt-10">
           <Link
             to="/blog"
@@ -157,19 +208,27 @@ const Home = () => {
         <h2 className="text-2xl md:text-3xl font-bold text-sky-700 mb-6">
           Recent Blog Posts
         </h2>
+
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
           {loading
             ? [...Array(6)].map((_, i) => <SkeletonCard key={i} />)
             : recentPosts.map((post) => {
-                const img = post.blocks?.find((b) => b.type === "image")?.url;
+                const firstImage = post.blocks?.find(
+                  (b) => b.type === "image",
+                )?.url;
+
                 return (
                   <BlogCard
                     key={post.id}
                     id={post.id}
                     title={post.title}
-                    featuredImage={img}
+                    featuredImage={firstImage}
                     province={post.province}
                     excerpt={post.excerpt}
+                    createdAt={post.createdAt}
+                    tags={post.tags || []}
+                    views={post.views ?? 0}
+                    trending={post.trending}
                   />
                 );
               })}
