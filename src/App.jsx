@@ -28,7 +28,8 @@ const App = () => {
           <Route path="/blog" element={<Blog />} />
 
           {/* Fixed Route Here */}
-          <Route path="/post/:id" element={<BlogPost />} />
+          <Route path="/post/:slug" element={<BlogPost />} />
+          <Route path="/post-id/:id" element={<BlogPost />} />
 
           <Route path="/login" element={<Login />} />
 

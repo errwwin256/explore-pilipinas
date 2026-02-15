@@ -2,7 +2,16 @@
 import React, { useState, useRef } from "react";
 import { useNavigate, Navigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { addDoc, collection, serverTimestamp } from "firebase/firestore";
+import {
+  addDoc,
+  collection,
+  serverTimestamp,
+  getDocs,
+  query,
+  where,
+  limit,
+} from "firebase/firestore";
+
 import { db } from "../firebase";
 
 /**
@@ -17,6 +26,35 @@ const UPLOAD_PRESET = "exploreph_preset"; // <-- keep your unsigned preset
 const MAX_IMAGE_WIDTH = 2000; // px - resize wide images to this width
 const IMAGE_QUALITY = 0.78; // 0..1 - compression quality
 const MAX_FILE_MB = 10; // quick client-side reject if file > 10MB (optional)
+
+function slugify(input) {
+  return (input || "")
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9\s-]/g, "")
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-");
+}
+
+async function uniqueSlug(baseSlug) {
+  let slug = baseSlug;
+  let n = 1;
+
+  while (true) {
+    const q = query(
+      collection(db, "posts"),
+      where("slug", "==", slug),
+      limit(1),
+    );
+
+    const snap = await getDocs(q);
+
+    if (snap.empty) return slug;
+
+    n += 1;
+    slug = `${baseSlug}-${n}`;
+  }
+}
 
 const Admin = () => {
   const { user } = useAuth();
@@ -56,7 +94,7 @@ const Admin = () => {
   const compressImage = (
     file,
     maxWidth = MAX_IMAGE_WIDTH,
-    quality = IMAGE_QUALITY
+    quality = IMAGE_QUALITY,
   ) =>
     new Promise((resolve, reject) => {
       try {
@@ -77,11 +115,11 @@ const Admin = () => {
               resolve(
                 new File([blob], file.name.replace(/\.\w+$/, ".jpg"), {
                   type: "image/jpeg",
-                })
+                }),
               );
             },
             "image/jpeg",
-            quality
+            quality,
           );
         };
         img.onerror = (e) => reject(new Error("Image load failed"));
@@ -131,8 +169,8 @@ const Admin = () => {
             reject(
               new Error(
                 errBody.error?.message ||
-                  `Upload failed with status ${xhr.status}`
-              )
+                  `Upload failed with status ${xhr.status}`,
+              ),
             );
           } catch {
             reject(new Error(`Upload failed with status ${xhr.status}`));
@@ -155,7 +193,7 @@ const Admin = () => {
       setErrorMsg(
         `Warning: selected file is ${
           Math.round(mb * 10) / 10
-        } MB. It will be compressed but may still be large.`
+        } MB. It will be compressed but may still be large.`,
       );
     } else {
       setErrorMsg("");
@@ -237,8 +275,12 @@ const Admin = () => {
       }
 
       // Add to Firestore
+      const baseSlug = slugify(title) || "post";
+      const slug = await uniqueSlug(baseSlug);
+
       await addDoc(collection(db, "posts"), {
         title: title.trim(),
+        slug, // ✅ ADD THIS
         province: province.trim(),
         blocks: formattedBlocks,
         author: user.email,
@@ -247,7 +289,7 @@ const Admin = () => {
       });
 
       // success — navigate to blog
-      navigate("/blog");
+      navigate(`/post/${slug}`);
     } catch (err) {
       console.error("Publish error:", err);
       setErrorMsg(err.message || "Upload failed — try again.");
@@ -390,7 +432,7 @@ const Admin = () => {
                     ✕
                   </button>
                 </div>
-              )
+              ),
             )}
           </div>
 

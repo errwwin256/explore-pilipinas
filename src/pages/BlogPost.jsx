@@ -1,11 +1,17 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { useParams, useNavigate, Link } from "react-router-dom";
+import { useParams, useNavigate, Link, useLocation } from "react-router-dom";
+
 import {
   doc,
   getDoc,
   deleteDoc,
   updateDoc,
   increment,
+  collection,
+  query,
+  where,
+  getDocs,
+  limit, // ✅ ADD THIS
 } from "firebase/firestore";
 
 import { db } from "../firebase";
@@ -35,7 +41,10 @@ import {
 const FALLBACK_BG = "bg-gray-100";
 
 export default function BlogPost() {
-  const { id } = useParams();
+  const { slug, id } = useParams();
+  const location = useLocation();
+  const isIdRoute = location.pathname.startsWith("/post-id/");
+
   const navigate = useNavigate();
   const { user } = useAuth();
 
@@ -59,71 +68,145 @@ export default function BlogPost() {
   // Load post once (stable hook)
   useEffect(() => {
     let mounted = true;
+
     async function load() {
       try {
         setLoading(true);
-        const snap = await getDoc(doc(db, "posts", id));
-        if (!snap.exists()) {
+
+        let data = null;
+
+        if (isIdRoute && id) {
+          // legacy: fetch by doc ID
+          const snap = await getDoc(doc(db, "posts", id));
+          if (!snap.exists()) {
+            if (!mounted) return;
+            setError("Post not found.");
+            return;
+          }
+          data = { id: snap.id, ...snap.data() };
+
+          // if it has slug, redirect to SEO URL
+          if (data.slug) {
+            navigate(`/post/${data.slug}`, { replace: true });
+            return;
+          }
+        } else if (slug) {
+          // new: fetch by slug
+          const q = query(
+            collection(db, "posts"),
+            where("slug", "==", slug),
+            limit(1),
+          );
+          const qs = await getDocs(q);
+
+          if (qs.empty) {
+            if (!mounted) return;
+            setError("Post not found.");
+            return;
+          }
+
+          const docSnap = qs.docs[0];
+          data = { id: docSnap.id, ...docSnap.data() };
+        } else {
           if (!mounted) return;
           setError("Post not found.");
-          setLoading(false);
           return;
         }
-        const data = { id: snap.id, ...snap.data() };
+
         if (!mounted) return;
+
         // 👁️ set views (fallback to 0 if missing)
         setViews(typeof data.views === "number" ? data.views : 0);
 
         // 👁️ count 1 view per SESSION per post
-        // This prevents refreshing from spamming views
-        const sessionKey = `viewed_post_${snap.id}`;
+        const sessionKey = `viewed_post_${data.id}`;
         if (!sessionStorage.getItem(sessionKey)) {
           sessionStorage.setItem(sessionKey, "1");
           try {
-            await updateDoc(doc(db, "posts", snap.id), {
-              views: increment(1),
-            });
+            await updateDoc(doc(db, "posts", data.id), { views: increment(1) });
             if (!mounted) return;
-            // update UI instantly
             setViews((v) => v + 1);
           } catch (err) {
             console.warn("Views update blocked or failed:", err);
           }
         }
+
         setPost(data);
-        // ensure editing state cleared
         setIsEditing(false);
         setDraftBlocks(null);
         setDraftSaved(false);
 
-        // SEO: title + description
+        // SEO title
         document.title = `${data.title} — ExplorePH`;
+
+        // Generate description from text blocks
         const desc = (data.blocks || [])
           .filter((b) => b.type === "text")
           .map((b) => b.value)
           .join(" ")
           .slice(0, 160);
+
+        // Meta description
         let meta = document.querySelector('meta[name="description"]');
         if (!meta) {
           meta = document.createElement("meta");
           meta.name = "description";
           document.head.appendChild(meta);
         }
-        meta.content = desc || "ExplorePH travel story";
+        const finalDesc = desc || "ExplorePH travel story";
+        meta.content = finalDesc;
+
+        // 🔥 OG + Twitter tags
+        const imageBlock = (data.blocks || []).find((b) => b.type === "image");
+        const imageUrl =
+          imageBlock?.url || "https://www.explorepilipinas.com/og-default.jpg";
+
+        const url = `https://www.explorepilipinas.com/post/${data.slug || data.id}`;
+
+        function setMeta(property, content, isName = false) {
+          const selector = isName
+            ? `meta[name='${property}']`
+            : `meta[property='${property}']`;
+
+          let element = document.querySelector(selector);
+
+          if (!element) {
+            element = document.createElement("meta");
+            if (isName) element.setAttribute("name", property);
+            else element.setAttribute("property", property);
+            document.head.appendChild(element);
+          }
+
+          element.setAttribute("content", content);
+        }
+
+        // Open Graph
+        setMeta("og:type", "article");
+        setMeta("og:title", data.title);
+        setMeta("og:description", finalDesc);
+        setMeta("og:image", imageUrl);
+        setMeta("og:url", url);
+
+        // Twitter
+        setMeta("twitter:card", "summary_large_image", true);
+        setMeta("twitter:title", data.title, true);
+        setMeta("twitter:description", finalDesc, true);
+        setMeta("twitter:image", imageUrl, true);
       } catch (err) {
         console.error(err);
         if (!mounted) return;
-        setError("Failed to load blog.");
+        setError(err?.message || "Failed to load blog.");
       } finally {
         if (!mounted) return;
         setLoading(false);
       }
     }
+
     load();
     return () => {
       mounted = false;
     };
-  }, [id]);
+  }, [slug, id, isIdRoute, navigate]);
 
   // reading progress bar
   useEffect(() => {
@@ -209,7 +292,7 @@ export default function BlogPost() {
 
   async function handleDeletePost() {
     if (!window.confirm("Are you sure you want to delete this blog?")) return;
-    await deleteDoc(doc(db, "posts", id));
+    await deleteDoc(doc(db, "posts", post.id));
     alert("Blog deleted!");
     navigate("/blog");
   }

@@ -4,7 +4,8 @@ import { doc, updateDoc, increment } from "firebase/firestore";
 import { db } from "../firebase";
 
 const BlogCard = ({
-  id,
+  id, // Firestore doc id
+  slug, // SEO slug
   title,
   excerpt,
   featuredImage,
@@ -15,6 +16,8 @@ const BlogCard = ({
   trending,
 }) => {
   const [views, setViews] = useState(Number(initialViews) || 0);
+
+  const href = slug ? `/post/${slug}` : `/post-id/${id}`; // ✅ DITO dapat
 
   const isNew = (() => {
     if (!createdAt) return false;
@@ -28,12 +31,11 @@ const BlogCard = ({
   const isTrending =
     trending === true || (typeof views === "number" && views >= 100);
 
-  // Increment views in Firestore and UI
   const incrementViews = async () => {
     try {
       const postRef = doc(db, "posts", id);
       await updateDoc(postRef, { views: increment(1) });
-      setViews((v) => v + 1); // immediate update in UI
+      setViews((v) => v + 1);
     } catch (error) {
       console.error("Failed to increment views:", error);
     }
@@ -41,7 +43,7 @@ const BlogCard = ({
 
   return (
     <article className="bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden">
-      <Link to={`/post/${id}`} className="block" onClick={incrementViews}>
+      <Link to={href} className="block" onClick={incrementViews}>
         {/* Image wrapper */}
         <div className="relative group">
           <img

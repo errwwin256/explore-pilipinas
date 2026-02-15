@@ -203,9 +203,12 @@ const Blog = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
           {currentPosts.map((post) => {
             const img = post.blocks.find((b) => b.type === "image")?.url;
+
             return (
               <BlogCard
+                key={post.id} // 👈 ADD THIS
                 id={post.id}
+                slug={post.slug}
                 title={post.title}
                 featuredImage={img}
                 province={post.province}
