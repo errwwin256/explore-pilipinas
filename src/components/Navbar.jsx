@@ -119,7 +119,7 @@ export default function Navbar() {
           />
         </div>
 
-        <div className="container mx-auto px-6 flex items-center justify-between">
+        <div className="container mx-auto px-6 flex items-center justify-between relative z-[60]">
           {/* Logo */}
           <Link
             to="/"
@@ -225,23 +225,12 @@ export default function Navbar() {
                 Logout
               </button>
             )}
-
-            {/* Mobile toggle */}
-            <button
-              className="md:hidden text-white text-3xl"
-              aria-controls="mobile-menu"
-              aria-expanded={menuOpen}
-              aria-label={menuOpen ? "Close menu" : "Open menu"}
-              onClick={() => setMenuOpen((v) => !v)}
-            >
-              {menuOpen ? <FiX /> : <FiMenu />}
-            </button>
           </div>
 
           {/* Mobile toggle (visible on small screens) */}
           <div className="md:hidden">
             <button
-              className="text-white text-3xl"
+              className="relative z-[70] text-white text-3xl"
               aria-controls="mobile-menu"
               aria-expanded={menuOpen}
               aria-label={menuOpen ? "Close menu" : "Open menu"}
@@ -251,27 +240,39 @@ export default function Navbar() {
             </button>
           </div>
         </div>
+        {/* Backdrop overlay (click outside to close) */}
+        {menuOpen && (
+          <button
+            aria-label="Close menu overlay"
+            onClick={() => setMenuOpen(false)}
+            className="md:hidden fixed inset-0 z-40 bg-black/30 backdrop-blur-[2px]"
+          />
+        )}
 
         {/* Mobile menu — smooth slide-down with blur */}
         <div
           id="mobile-menu"
           role="menu"
           aria-hidden={!menuOpen}
-          className={`md:hidden overflow-hidden transition-all duration-350
-            ${menuOpen ? "max-h-96 opacity-100 py-5" : "max-h-0 opacity-0"}
-            bg-gradient-to-b from-[#00c4ccdd] via-[#007fffcc] to-[#4ba3f7cc] backdrop-blur-md`}
+          className={`md:hidden fixed left-0 top-0 w-full z-50
+    transition-transform duration-300 ease-out
+    ${menuOpen ? "translate-y-0" : "-translate-y-full"}
+  `}
         >
-          <div className="px-6">
+          <div
+            className="pt-24 px-6 pb-6
+    bg-gradient-to-r from-[#00c4cc88] via-[#007fff88] to-[#4ba3f788]
+    backdrop-blur-lg border-b border-white/25 shadow-lg"
+          >
             <ul className="flex flex-col gap-4">
               {NAV_LINKS_BASE.map((link) => (
                 <li key={`m-${link.path}`}>
                   <Link
                     to={link.path}
                     onClick={() => setMenuOpen(false)}
-                    className={`block px-4 py-2 rounded-lg text-blue-800 focus:outline-none focus:ring-2 focus:ring-white/30 ${mobileActiveClassFallback(
-                      location.pathname,
-                      link.path
-                    )}`}
+                    className={`block px-4 py-3 rounded-xl text-white/95
+  focus:outline-none focus:ring-2 focus:ring-white/30
+  ${mobileActiveClassFallback(location.pathname, link.path)}`}
                     role="menuitem"
                   >
                     {link.label}
@@ -287,7 +288,7 @@ export default function Navbar() {
                       onClick={() => setMenuOpen(false)}
                       className={`block px-4 py-2 rounded-lg text-white/95 focus:outline-none focus:ring-2 focus:ring-white/30 ${mobileActiveClassFallback(
                         location.pathname,
-                        "/admin"
+                        "/admin",
                       )}`}
                       role="menuitem"
                     >
@@ -317,7 +318,7 @@ export default function Navbar() {
   // Helper placed here to keep JSX above tidy
   function mobileActiveClassFallback(currentPath, linkPath) {
     return currentPath === linkPath
-      ? "bg-white/90 text-blue-700"
-      : "hover:bg-white/20";
+      ? "bg-white/35 shadow-sm"
+      : "hover:bg-white/15";
   }
 }
