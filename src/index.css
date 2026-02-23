@@ -994,3 +994,106 @@ body {
   animation-timing-function: ease-in-out;
   animation-iteration-count: infinite;
 }
+/* 🫧 Clam bubble burst */
+.clam-bubble {
+  position: absolute;
+  left: 50%;
+  top: 40%;
+  width: 7px;
+  height: 7px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.85);
+  transform: translateX(-50%);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 5; /* behind clam (z-10), above background */
+  filter: blur(0.2px);
+}
+
+.clam-bubble.on {
+  opacity: 1;
+}
+
+/* stagger sizes */
+.clam-bubble.b1 {
+  width: 6px;
+  height: 6px;
+}
+.clam-bubble.b2 {
+  width: 8px;
+  height: 8px;
+}
+.clam-bubble.b3 {
+  width: 5px;
+  height: 5px;
+}
+.clam-bubble.b4 {
+  width: 7px;
+  height: 7px;
+}
+
+.clam-bubble.b1.on {
+  animation: clamBubble1 1.1s ease-out infinite;
+}
+.clam-bubble.b2.on {
+  animation: clamBubble2 1.25s ease-out infinite;
+}
+.clam-bubble.b3.on {
+  animation: clamBubble3 1.35s ease-out infinite;
+}
+.clam-bubble.b4.on {
+  animation: clamBubble4 1.2s ease-out infinite;
+}
+
+@keyframes clamBubble1 {
+  0% {
+    transform: translate(-50%, 10px) scale(0.6);
+    opacity: 0;
+  }
+  20% {
+    opacity: 0.9;
+  }
+  100% {
+    transform: translate(-60%, -55px) scale(1.1);
+    opacity: 0;
+  }
+}
+@keyframes clamBubble2 {
+  0% {
+    transform: translate(-50%, 12px) scale(0.5);
+    opacity: 0;
+  }
+  20% {
+    opacity: 0.85;
+  }
+  100% {
+    transform: translate(-35%, -65px) scale(1);
+    opacity: 0;
+  }
+}
+@keyframes clamBubble3 {
+  0% {
+    transform: translate(-50%, 14px) scale(0.45);
+    opacity: 0;
+  }
+  25% {
+    opacity: 0.8;
+  }
+  100% {
+    transform: translate(-75%, -70px) scale(0.95);
+    opacity: 0;
+  }
+}
+@keyframes clamBubble4 {
+  0% {
+    transform: translate(-50%, 10px) scale(0.5);
+    opacity: 0;
+  }
+  25% {
+    opacity: 0.85;
+  }
+  100% {
+    transform: translate(-50%, -60px) scale(1.05);
+    opacity: 0;
+  }
+}

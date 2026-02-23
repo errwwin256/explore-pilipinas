@@ -1,7 +1,9 @@
 import { useState, useEffect } from "react";
 import ReCAPTCHA from "react-google-recaptcha";
 import emailjs from "@emailjs/browser"; // ✅ Added EmailJS
-import { Facebook, Instagram, Youtube, Linkedin } from "lucide-react";
+import { Facebook, Instagram, Youtube, Linkedin, Twitter } from "lucide-react";
+import { Globe } from "lucide-react";
+import { FaTiktok, FaPinterest } from "react-icons/fa";
 
 const Footer = () => {
   const [captcha, setCaptcha] = useState(null);
@@ -51,6 +53,43 @@ const Footer = () => {
         alert("Failed to send message. Please try again.");
       });
   };
+  function SocialClam({ Icon, link, index, hoveredClam, setHoveredClam }) {
+    const isHover = hoveredClam === index;
+
+    return (
+      <div
+        className="relative w-16 h-20 cursor-pointer"
+        onMouseEnter={() => setHoveredClam(index)}
+        onMouseLeave={() => setHoveredClam(null)}
+      >
+        {/* 🫧 BUBBLES (only show when hovered) */}
+        <span className={`clam-bubble b1 ${isHover ? "on" : ""}`} />
+        <span className={`clam-bubble b2 ${isHover ? "on" : ""}`} />
+        <span className={`clam-bubble b3 ${isHover ? "on" : ""}`} />
+        <span className={`clam-bubble b4 ${isHover ? "on" : ""}`} />
+
+        {/* 🐚 CLAM IMAGE */}
+        <img
+          src={isHover ? "/images/clam-open.png" : "/images/clam-closed.png"}
+          alt="clam shell"
+          className={`absolute top-0 left-1/2 -translate-x-1/2 w-full h-auto transition-transform duration-500 pointer-events-none z-10
+        ${isHover ? "rotate-[20deg]" : ""}`}
+        />
+
+        {/* ICON LINK */}
+        <a
+          href={link}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2
+        w-8 h-8 rounded-full bg-white flex items-center justify-center shadow-lg transition-all duration-500 z-20
+        ${isHover ? "opacity-100 scale-100" : "opacity-0 scale-75"}`}
+        >
+          <Icon className="w-5 h-5 text-[#1c725c]" />
+        </a>
+      </div>
+    );
+  }
 
   return (
     <footer className="relative bg-gradient-to-b from-[#20b995] to-[#15785c] text-white pt-20 overflow-hidden">
@@ -114,48 +153,67 @@ const Footer = () => {
           <h3 className="text-2xl font-bold text-yellow-200 mb-8 drop-shadow-lg">
             Follow me on Socials!
           </h3>
-
-          <div className="flex justify-center md:justify-start gap-5">
-            {[
-              { Icon: Facebook, link: "https://www.facebook.com/errwwin25/" },
-              { Icon: Instagram, link: "https://www.instagram.com/errwwin25/" },
-              { Icon: Youtube, link: "https://www.youtube.com/@ExplorePH25" },
-              {
-                Icon: Linkedin,
-                link: "https://www.linkedin.com/in/errwwin25/",
-              },
-            ].map(({ Icon, link }, i) => (
-              <div
-                key={i}
-                className="relative w-16 h-20 cursor-pointer"
-                onMouseEnter={() => setHoveredClam(i)}
-                onMouseLeave={() => setHoveredClam(null)}
-              >
-                <img
-                  src={
-                    hoveredClam === i
-                      ? "/images/clam-open.png"
-                      : "/images/clam-closed.png"
-                  }
-                  alt="clam shell"
-                  className={`absolute top-0 left-1/2 -translate-x-1/2 w-full h-auto transition-transform duration-500 pointer-events-none
-            ${hoveredClam === i ? "rotate-[20deg]" : ""}`}
+          {/* 🐚 Follow Me Column */}
+          <div className="flex flex-col items-center md:items-start gap-6">
+            {/* TOP ROW — 4 ICONS */}
+            {/* TOP ROW — 4 ICONS */}
+            <div className="flex flex-wrap justify-center md:justify-start gap-3 sm:gap-4 lg:gap-5">
+              {[
+                {
+                  Icon: Facebook,
+                  link: "https://www.facebook.com/explorepilipinas25/",
+                },
+                {
+                  Icon: Instagram,
+                  link: "https://www.instagram.com/explorepilipinas25/",
+                },
+                {
+                  Icon: Youtube,
+                  link: "https://www.youtube.com/@ExplorePilipinas",
+                },
+                {
+                  Icon: Linkedin,
+                  link: "https://www.linkedin.com/in/errwwin25/",
+                },
+              ].map(({ Icon, link }, i) => (
+                <SocialClam
+                  key={i}
+                  Icon={Icon}
+                  link={link}
+                  index={i}
+                  hoveredClam={hoveredClam}
+                  setHoveredClam={setHoveredClam}
                 />
+              ))}
+            </div>
 
-                <a
-                  href={link}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2
-            w-8 h-8 rounded-full bg-white flex items-center justify-center shadow-lg transition-all duration-500
-            ${
-              hoveredClam === i ? "opacity-100 scale-100" : "opacity-0 scale-75"
-            }`}
-                >
-                  <Icon className="w-5 h-5 text-[#1c725c]" />
-                </a>
-              </div>
-            ))}
+            {/* BOTTOM ROW — NEW ICONS */}
+            <div className="flex flex-wrap justify-center md:justify-start gap-3 sm:gap-4 lg:gap-5">
+              {[
+                {
+                  Icon: FaTiktok,
+                  link: "https://www.tiktok.com/@explorepilipinas25",
+                },
+                { Icon: Twitter, link: "https://x.com/exploreph25" },
+                {
+                  Icon: FaPinterest,
+                  link: "https://ph.pinterest.com/explorepilipinas/",
+                },
+                {
+                  Icon: Globe,
+                  link: "https://errwwin256.github.io/my-portfolio/",
+                },
+              ].map(({ Icon, link }, i) => (
+                <SocialClam
+                  key={i + 10}
+                  Icon={Icon}
+                  link={link}
+                  index={i + 10}
+                  hoveredClam={hoveredClam}
+                  setHoveredClam={setHoveredClam}
+                />
+              ))}
+            </div>
           </div>
         </div>
 
