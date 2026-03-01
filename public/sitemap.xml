@@ -7,17 +7,27 @@
   </url>
 
   <url>
-    <loc>https://www.explorepilipinas.com/about</loc>
-    <priority>0.8</priority>
-  </url>
-
-  <url>
     <loc>https://www.explorepilipinas.com/blog</loc>
     <priority>0.9</priority>
   </url>
 
   <url>
-    <loc>https://www.explorepilipinas.com/privacy</loc>
+    <loc>https://www.explorepilipinas.com/travel-deals</loc>
+    <priority>0.8</priority>
+  </url>
+
+  <url>
+    <loc>https://www.explorepilipinas.com/videos</loc>
+    <priority>0.8</priority>
+  </url>
+
+  <url>
+    <loc>https://www.explorepilipinas.com/about</loc>
+    <priority>0.8</priority>
+  </url>
+
+  <url>
+    <loc>https://www.explorepilipinas.com/privacy-policy</loc>
     <priority>0.5</priority>
   </url>
 
@@ -26,15 +36,22 @@
     <priority>0.5</priority>
   </url>
 
-  <!-- Posts (use slug URL) -->
+  <!-- Blog Posts -->
   <url>
     <loc>https://www.explorepilipinas.com/post/tinagong-dagat-romblon</loc>
     <priority>0.9</priority>
   </url>
 
+  <!-- Travel Deals -->
   <url>
-    <loc>https://www.explorepilipinas.com/post/my-first-solo-trip-to-baguio</loc>
-    <priority>0.9</priority>
+    <loc>https://www.explorepilipinas.com/travel-deals/cebu-pacific-piso-fare</loc>
+    <priority>0.7</priority>
+  </url>
+
+  <!-- Videos -->
+  <url>
+    <loc>https://www.explorepilipinas.com/videos/angeles-city-food-trip</loc>
+    <priority>0.7</priority>
   </url>
 
 </urlset>

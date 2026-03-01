@@ -6,6 +6,8 @@ import { FiMenu, FiX } from "react-icons/fi";
 const NAV_LINKS_BASE = [
   { path: "/", label: "Home" },
   { path: "/blog", label: "Blog" },
+  { path: "/travel-deals", label: "Travel Deals" },
+  { path: "/videos", label: "Videos" },
   { path: "/about", label: "About" },
 ];
 
@@ -42,7 +44,11 @@ export default function Navbar() {
 
   // Update pill position & size
   const updatePill = () => {
-    const currentPath = location.pathname;
+    const currentPath = location.pathname.startsWith("/travel-deals")
+      ? "/travel-deals"
+      : location.pathname.startsWith("/videos")
+        ? "/videos"
+        : location.pathname;
     const activeEl = linksRef.current[currentPath];
     const container = linksContainerRef.current;
 

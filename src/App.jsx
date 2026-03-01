@@ -13,6 +13,10 @@ import ScrollToTop from "./ScrollToTop";
 import ProtectedRoute from "./components/ProtectedRoute";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import Terms from "./pages/Terms";
+import TravelDeals from "./pages/TravelDeals";
+import Deal from "./pages/Deal";
+import Videos from "./pages/Videos";
+import WatchVideo from "./pages/WatchVideo";
 
 import FloatingBalloon from "./components/FloatingBalloon"; // 👈 ADDED THIS
 
@@ -26,6 +30,10 @@ const App = () => {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/blog" element={<Blog />} />
+          <Route path="/travel-deals" element={<TravelDeals />} />
+          <Route path="/travel-deals/:slug" element={<Deal />} />
+          <Route path="/videos" element={<Videos />} />
+          <Route path="/videos/:slug" element={<WatchVideo />} />
 
           {/* Fixed Route Here */}
           <Route path="/post/:slug" element={<BlogPost />} />
